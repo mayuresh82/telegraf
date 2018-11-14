@@ -21,7 +21,7 @@ func TestNetboxParsers(t *testing.T) {
 	}
 	assert.Equal(t, int(device.id), 1019)
 	assert.Equal(t, device.name, "br1-sjc1")
-	assert.Equal(t, device.url, "https://netbox.roblox.local/api/dcim/devices/1019/")
+	assert.Equal(t, device.url, "/api/dcim/devices/1019/")
 
 	site := &NetboxElement{}
 	err = site.parse("site", []byte(deviceRaw))
@@ -30,7 +30,7 @@ func TestNetboxParsers(t *testing.T) {
 	}
 	assert.Equal(t, int(site.id), 14)
 	assert.Equal(t, site.name, "fra1")
-	assert.Equal(t, site.url, "https://netbox.roblox.local/api/dcim/sites/14/")
+	assert.Equal(t, site.url, "/api/dcim/sites/14/")
 }
 
 func newM1() telegraf.Metric {

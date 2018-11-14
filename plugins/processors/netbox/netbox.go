@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -68,7 +69,11 @@ func (e *NetboxElement) parse(eType string, data []byte) error {
 	if d, ok := result[eType].(map[string]interface{}); ok {
 		e.id = d["id"].(float64)
 		e.name = d["name"].(string)
-		e.url = d["url"].(string)
+		u, err := url.Parse(d["url"].(string))
+		if err != nil {
+			return fmt.Errorf("Failed to parse url: %v", err)
+		}
+		e.url = u.Path
 	} else {
 		return fmt.Errorf("Failed to parse result to netbox element")
 	}
@@ -111,14 +116,13 @@ func (i *NetboxData) query(query string) ([]byte, error) {
 }
 
 func (i *NetboxData) queryNetboxDevice(ip string) (*NetboxDevice, error) {
-	netboxUri := fmt.Sprintf("https://%s/api", i.netboxAddr)
 	device := &NetboxElement{}
 	site := &NetboxElement{}
 	region := &NetboxElement{}
 
 	// We need to do 3 queries here for device, region and site
 	// We get the subsequent query URL from the previous query result
-	url := fmt.Sprintf("%s/ipam/ip-addresses/?q=%s%%2F32", netboxUri, ip)
+	url := fmt.Sprintf("%s/api/ipam/ip-addresses/?q=%s%%2F32", i.netboxAddr, ip)
 	body, err := i.query(url)
 	if err != nil {
 		return nil, err
@@ -126,14 +130,14 @@ func (i *NetboxData) queryNetboxDevice(ip string) (*NetboxDevice, error) {
 	if err := device.parse("device", body); err != nil {
 		return nil, err
 	}
-	body, err = i.query(device.url)
+	body, err = i.query(fmt.Sprintf(i.netboxAddr + device.url))
 	if err != nil {
 		return nil, err
 	}
 	if err := site.parse("site", body); err != nil {
 		return nil, err
 	}
-	body, err = i.query(site.url)
+	body, err = i.query(fmt.Sprintf(i.netboxAddr + site.url))
 	if err != nil {
 		return nil, err
 	}
