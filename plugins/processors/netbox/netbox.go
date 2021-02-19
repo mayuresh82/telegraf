@@ -59,7 +59,7 @@ func (e *NetboxElement) parse(eType string, data []byte) error {
 			return fmt.Errorf("No results found in netbox")
 		}
 		result = tmp[0].(map[string]interface{})
-		result = result["interface"].(map[string]interface{})
+		result = result["assigned_object"].(map[string]interface{})
 	case "site", "region":
 		if err := json.Unmarshal(data, &result); err != nil {
 			return err
@@ -122,7 +122,7 @@ func (i *NetboxData) queryNetboxDevice(ip string) (*NetboxDevice, error) {
 
 	// We need to do 3 queries here for device, region and site
 	// We get the subsequent query URL from the previous query result
-	url := fmt.Sprintf("%s/api/ipam/ip-addresses/?q=%s%%2F32", i.netboxAddr, ip)
+	url := fmt.Sprintf("%s/api/ipam/ip-addresses/?address=%s", i.netboxAddr, ip)
 	body, err := i.query(url)
 	if err != nil {
 		return nil, err
